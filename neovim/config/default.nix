@@ -1,5 +1,8 @@
 _: {
   imports = [
-    ./plugins/themes
+    #ui
+    ./plugins/ui
+    #themes
+    ./plugins/themes/lualine.nix
   ];
 }
