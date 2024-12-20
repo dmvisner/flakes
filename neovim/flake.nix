@@ -1,37 +1,28 @@
 {
-  description = "A very basic flake";
+  description = "derek's neovim flake";
 
-  inputs.nixvim.url = "github:nix-community/nixvim";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixvim.url = "github:nix-community/nixvim"; 
+  };
 
-  outputs = {
-    self,
-    nixvim,
-    flake-parts,
-  } @ inputs: let
-    config = {
-      colorschemes.gruvbox.enable = true;
-    };
-  in
-    flake-parts.lib.mkFlake {inherit inputs;} {
-      systems = [
-        "aarch64-darwin"
-        "aarch64-linux"
-        "x86_64-darwin"
+  outputs = { self, nixpkgs, nixvim } @ inputs: let
+
+    module = {
+      module = import ./config;
+    }; 
+
+    forAllSystems = function:
+      nixpkgs.lib.genAttrs [
         "x86_64-linux"
-      ];
+        "aarch64-linux"
+      ] (system: function nixvim.legacyPackages.${system});
 
-      perSystem = {
-        pkgs,
-        system,
-        ...
-      }: let
-        nixvim' = nixvim.legacyPackages."${system}";
-        nvim = nixvim'.makeNixvim config;
-      in {
-        packages = {
-          inherit nvim;
-          default = nvim;
-        };
-      };
-    };
+  in {
+    packages = forAllSystems (nixvim': {
+      default = nixvim'.makeNixvimWithModule module;
+    });
+    
+    
+  };
 }
