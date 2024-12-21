@@ -2,27 +2,26 @@
   description = "derek's neovim flake";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixvim.url = "github:nix-community/nixvim"; 
+    flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
-  outputs = { self, nixpkgs, nixvim } @ inputs: let
+  outputs = { self, nixpkgs, nixvim, flake-parts } @ inputs: 
+    flake-parts.lib.mkFlake { inherit inputs; } {
 
-    module = {
-      module = import ./config;
-    }; 
-
-    forAllSystems = function:
-      nixpkgs.lib.genAttrs [
-        "x86_64-linux"
-        "aarch64-linux"
-      ] (system: function nixvim.legacyPackages.${system});
-
-  in {
-    packages = forAllSystems (nixvim': {
-      default = nixvim'.makeNixvimWithModule module;
-    });
+    systems = [
+      "x86_64-linux"
+    ];
     
-    
+    perSystem = { system, ... }: let
+
+      module = {
+        module = import ./config;
+      };
+
+      nixvim' = nixvim.legacyPackages.${system};
+    in {
+      packages.default = nixvim'.makeNixvimWithModule module;
+    };
   };
 }

@@ -2,15 +2,21 @@
   description = "Parent flake for all of my dev environment packages";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     neovim.url = "./neovim";
+    flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
-  outputs = { self, nixpkgs, neovim }: {
-    packages = {
-      x86_64-linux = {
-        neovim = neovim.packages.x86_64-linux.default; 
+  outputs = { self, neovim, flake-parts } @ inputs: 
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = [
+        "x86_64-linux"
+      ];
+      perSystem = { system, ... }: let
+
+        neovim' = neovim.packages.${system}.default;
+
+      in {   
+        packages.neovim = neovim';
       };
     };
-  };
 }
